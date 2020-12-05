@@ -2,12 +2,25 @@ let facemesh;
 let video;
 let predictions = [];
 
+let model;
+let targetLabel;
+let state = 'collection';
+
 function setup() {
   createCanvas(640, 480);
   video = createCapture(VIDEO);
   video.size(width, height);
 
   facemesh = ml5.facemesh(video, modelReady);
+
+  let options = {
+    inputs: 1404,
+    outputs: ['label'],
+    task: 'classification',
+    debug: 'true',
+  };
+
+  model = ml5.neuralNetwork(options);
 
   // This sets up an event that fills the global variable "predictions"
   // with an array every time new predictions are made
@@ -43,4 +56,39 @@ function drawKeypoints() {
       ellipse(x, y, 5, 5);
     }
   }
+}
+
+function mousePressed() {
+  if (predictions[0] != undefined) {
+    console.log(predictions[0]);
+    let inputs = predictions[0].mesh.flat();
+    if (state == 'collection') {
+      let target = {
+        label: targetLabel,
+      };
+      model.addData(inputs, target);
+      console.log('data recorded', inputs, target);
+    }
+  }
+}
+
+function keyPressed() {
+  console.log('starting training');
+  if (key == 't') {
+    model.normalizeData();
+    let options = {
+      epochs: 400,
+    };
+
+    model.train(options, whileTraining, finishedTraining);
+  } else {
+    targetLabel = key.toUpperCase();
+  }
+}
+
+function whileTraining(epoch, loss) {
+  console.log(epoch, loss);
+}
+function finishedTraining() {
+  console.log('finished training');
 }
