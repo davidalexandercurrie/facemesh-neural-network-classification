@@ -4,9 +4,10 @@ let predictions = [];
 
 let model;
 let targetLabel;
-let state = 'collection';
+let state = 'prediction';
 
 let nnResults;
+let loopBroken = false;
 
 function setup() {
   createCanvas(640, 480);
@@ -19,10 +20,11 @@ function setup() {
     inputs: 1404,
     outputs: ['label'],
     task: 'classification',
-    debug: 'true',
+    debug: 'false',
   };
 
   model = ml5.neuralNetwork(options);
+  autoStartPredict();
 
   // This sets up an event that fills the global variable "predictions"
   // with an array every time new predictions are made
@@ -32,6 +34,20 @@ function setup() {
 
   // Hide the video element, and just show the canvas
   video.hide();
+
+  createButton('Load Model').mousePressed(onLoadModelClick);
+  createButton('Start Prediction').mousePressed(onPredictClick);
+}
+
+function autoStartPredict() {
+  if (state == 'prediction') {
+    onLoadModelClick();
+    onPredictClick();
+  }
+}
+
+function dataLoaded() {
+  console.log(model.data);
 }
 
 function modelReady() {
@@ -43,6 +59,7 @@ function draw() {
 
   // We can call both functions to draw all keypoints
   drawKeypoints();
+  restartPredictions();
 }
 
 // A function to draw ellipses over the detected keypoints
@@ -62,7 +79,6 @@ function drawKeypoints() {
 
 function mousePressed() {
   if (predictions[0] != undefined) {
-    console.log(predictions[0]);
     let inputs = predictions[0].mesh.flat();
     if (state == 'collection') {
       let target = {
@@ -88,6 +104,7 @@ function gotResults(error, results) {
   }
   console.log(`${results[0].label}: ${results[0].confidence}`); // print label & confidence
   nnResults = results;
+  classify();
 }
 
 function keyPressed() {
@@ -99,6 +116,10 @@ function keyPressed() {
       epochs: 50,
     };
     model.train(options, whileTraining, finishedTraining);
+  } else if (key == 's') {
+    model.saveData();
+  } else if (key == 'm') {
+    model.save();
   } else {
     targetLabel = key.toUpperCase();
   }
@@ -108,6 +129,33 @@ function whileTraining(epoch, loss) {
   console.log(epoch, loss);
 }
 function finishedTraining() {
-  state = 'prediction';
   console.log('finished training');
+}
+
+function classify() {
+  if (predictions[0] != undefined) {
+    let inputs = predictions[0].mesh.flat();
+    model.classify(inputs, gotResults);
+  } else {
+    loopBroken = true;
+  }
+}
+
+function onPredictClick() {
+  state = 'prediction';
+}
+function onLoadModelClick() {
+  const modelInfo = {
+    model: 'model/model.json',
+    metadata: 'model/model_meta.json',
+    weights: 'model/model.weights.bin',
+  };
+  model.load(modelInfo, () => console.log('Model Loaded.'));
+}
+
+function restartPredictions() {
+  if (loopBroken) {
+    loopBroken = false;
+    classify();
+  }
 }
