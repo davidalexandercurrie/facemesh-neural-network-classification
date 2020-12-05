@@ -6,6 +6,8 @@ let model;
 let targetLabel;
 let state = 'collection';
 
+let nnResults;
+
 function setup() {
   createCanvas(640, 480);
   video = createCapture(VIDEO);
@@ -66,20 +68,36 @@ function mousePressed() {
       let target = {
         label: targetLabel,
       };
-      model.addData(inputs, target);
-      console.log('data recorded', inputs, target);
+      if (targetLabel != undefined) {
+        model.addData(inputs, target);
+        console.log(`Data recorded for label ${targetLabel}`);
+      } else {
+        console.log('Target label not set.');
+      }
+      text(targetLabel, mouseX, mouseY);
+    } else if (state == 'prediction') {
+      model.classify(inputs, gotResults);
     }
   }
 }
 
+function gotResults(error, results) {
+  if (error) {
+    console.error(error);
+    return;
+  }
+  console.log(`${results[0].label}: ${results[0].confidence}`); // print label & confidence
+  nnResults = results;
+}
+
 function keyPressed() {
-  console.log('starting training');
   if (key == 't') {
+    console.log('starting training');
+    state = 'training';
     model.normalizeData();
     let options = {
-      epochs: 400,
+      epochs: 50,
     };
-
     model.train(options, whileTraining, finishedTraining);
   } else {
     targetLabel = key.toUpperCase();
@@ -90,5 +108,6 @@ function whileTraining(epoch, loss) {
   console.log(epoch, loss);
 }
 function finishedTraining() {
+  state = 'prediction';
   console.log('finished training');
 }
