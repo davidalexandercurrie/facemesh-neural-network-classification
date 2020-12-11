@@ -7,9 +7,17 @@ let targetLabel;
 let state = 'prediction';
 
 let nnResults;
-let loopBroken = false;
+let loopBroken = true;
+
+let inp;
+let submit;
+
+let nameValue = '';
 
 let socket;
+
+let model1ready = false;
+let model2ready = false;
 
 function setup() {
   createCanvas(640, 480);
@@ -34,13 +42,17 @@ function setup() {
   // with an array every time new predictions are made
   facemesh.on('predict', results => {
     predictions = results;
+    if (!model1ready) {
+      model1ready = true;
+      onPredictClick();
+    }
   });
 
   // Hide the video element, and just show the canvas
   video.hide();
 
-  createButton('Load Model').mousePressed(onLoadModelClick);
-  createButton('Start Prediction').mousePressed(onPredictClick);
+  // createButton('Load Model').mousePressed(onLoadModelClick);
+  // createButton('Start Prediction').mousePressed(onPredictClick);
 }
 
 function autoStartPredict() {
@@ -110,24 +122,33 @@ function gotResults(error, results) {
   nnResults = results;
   sendToServer();
   classify();
+  if (!model2ready) {
+    inp = createInput('name');
+    inp.input(myInputEvent);
+    submitButton = createButton('submit');
+    submitButton.mousePressed(sendName);
+    model2ready = true;
+  }
 }
 
+function myInputEvent() {}
+
 function keyPressed() {
-  if (key == 't') {
-    console.log('starting training');
-    state = 'training';
-    model.normalizeData();
-    let options = {
-      epochs: 50,
-    };
-    model.train(options, whileTraining, finishedTraining);
-  } else if (key == 's') {
-    model.saveData();
-  } else if (key == 'm') {
-    model.save();
-  } else {
-    targetLabel = key.toUpperCase();
-  }
+  // if (key == 't') {
+  //   console.log('starting training');
+  //   state = 'training';
+  //   model.normalizeData();
+  //   let options = {
+  //     epochs: 50,
+  //   };
+  //   model.train(options, whileTraining, finishedTraining);
+  // } else if (key == 's') {
+  //   model.saveData();
+  // } else if (key == 'm') {
+  //   model.save();
+  // } else {
+  //   targetLabel = key.toUpperCase();
+  // }
 }
 
 function whileTraining(epoch, loss) {
@@ -166,5 +187,14 @@ function restartPredictions() {
 }
 
 const sendToServer = () => {
-  socket.emit('facemesh', nnResults);
+  let data = {
+    data: nnResults,
+    name: nameValue,
+  };
+  socket.emit('facemesh', data);
 };
+
+function sendName() {
+  nameValue = inp.value;
+  inp.value('');
+}
