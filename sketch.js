@@ -192,7 +192,7 @@ const sendToServer = () => {
     name: nameValue,
   };
   console.log(data);
-  socket.emit('facemesh', data);
+  socket.emit('facemesh', nnResults);
 };
 
 function sendName() {
