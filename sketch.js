@@ -51,8 +51,8 @@ function setup() {
   // Hide the video element, and just show the canvas
   video.hide();
 
-  // createButton('Load Model').mousePressed(onLoadModelClick);
-  // createButton('Start Prediction').mousePressed(onPredictClick);
+  createButton('Load Model').mousePressed(onLoadModelClick);
+  createButton('Start Prediction').mousePressed(onPredictClick);
 }
 
 function autoStartPredict() {
@@ -134,21 +134,21 @@ function gotResults(error, results) {
 function myInputEvent() {}
 
 function keyPressed() {
-  // if (key == 't') {
-  //   console.log('starting training');
-  //   state = 'training';
-  //   model.normalizeData();
-  //   let options = {
-  //     epochs: 50,
-  //   };
-  //   model.train(options, whileTraining, finishedTraining);
-  // } else if (key == 's') {
-  //   model.saveData();
-  // } else if (key == 'm') {
-  //   model.save();
-  // } else {
-  //   targetLabel = key.toUpperCase();
-  // }
+  if (key == 't') {
+    console.log('starting training');
+    state = 'training';
+    model.normalizeData();
+    let options = {
+      epochs: 50,
+    };
+    model.train(options, whileTraining, finishedTraining);
+  } else if (key == 's') {
+    model.saveData();
+  } else if (key == 'm') {
+    model.save();
+  } else {
+    targetLabel = key.toUpperCase();
+  }
 }
 
 function whileTraining(epoch, loss) {
