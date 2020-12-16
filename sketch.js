@@ -4,7 +4,7 @@ let predictions = [];
 
 let model;
 let targetLabel;
-let state = 'prediction';
+let state = 'collection';
 
 let nnResults;
 let loopBroken = true;
@@ -36,7 +36,7 @@ function setup() {
   };
 
   model = ml5.neuralNetwork(options);
-  autoStartPredict();
+  // autoStartPredict();
 
   // This sets up an event that fills the global variable "predictions"
   // with an array every time new predictions are made
